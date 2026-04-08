@@ -1,0 +1,7 @@
+requests
+cryptography
+fastapi
+uvicorn
+python-multipart
+reportlab
+PyQt5

@@ -1,6 +1,8 @@
 import subprocess
 import json
 import os
+import sys
+import ctypes
 import base64
 import hashlib
 import random
@@ -31,6 +33,16 @@ DISCLAIMER = """
 """
 
 # ---------------- Helper functions ----------------
+def get_resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 def generate_device_id(a_args: str, usr_id: str = "usr_id"):
     timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
     rand_str = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
@@ -73,7 +85,8 @@ def get_disks():
 def run_wipe(disk_num, disk_letter):
     print(f"\n[+] Running wipe: Disk {disk_num}, Drive {disk_letter}:")
     try:
-        subprocess.run(["a.exe", str(disk_num), disk_letter], check=True)
+        a_exe_path = get_resource_path("a.exe")
+        subprocess.run([a_exe_path, str(disk_num), disk_letter], check=True)
         print("\n[+] Wipe completed successfully!")
     except subprocess.CalledProcessError as e:
         print("\n[!] Wipe failed.")
@@ -131,7 +144,20 @@ def register_and_submit(device_id, usr_id="usr_id"):
     print("Certificate downloaded as my_wipe_certificate.json")
 
 # ---------------- Main ----------------
+def is_admin():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
+
 def main():
+    if not is_admin():
+        print("[!] Administrator privileges required. Requesting elevation...")
+        # Re-run the script with admin rights
+        # Parameters: hwnd, lpOperation, lpFile, lpParameters, lpDirectory, nShowCmd
+        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
+        sys.exit()
+
     os.system("cls" if os.name == "nt" else "clear")
     print(BANNER)
     print(TAGLINE)
