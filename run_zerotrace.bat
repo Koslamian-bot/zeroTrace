@@ -1,6 +1,0 @@
-@echo off
-echo Starting ZeroTrace Certification Server...
-start /b .\venv\Scripts\python -m uvicorn wipeb:app --host 127.0.0.1 --port 8081
-echo Starting ZeroTrace GUI...
-.\venv\Scripts\python gui.py
-pause
