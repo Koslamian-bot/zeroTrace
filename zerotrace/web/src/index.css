@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #0a0a0a;
+  --color-primary: #14b8a6;
+  --color-primary-glow: rgba(20, 184, 166, 0.5);
+  --color-secondary: #0f172a;
+
+  --animate-fade-in: fadeIn 0.5s ease-out;
+  --animate-slide-up: slideUp 0.5s ease-out;
+  --animate-pulse-glow: pulseGlow 2s infinite;
+
+  @keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  @keyframes slideUp {
+    0% { transform: translateY(20px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 5px #14b8a6; }
+    50% { box-shadow: 0 0 20px #14b8a6; }
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-[#0a0a0a] text-gray-300 antialiased overflow-x-hidden selection:bg-teal-500/30 selection:text-teal-200;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-white font-medium tracking-tight;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/5 backdrop-blur-lg border border-white/10;
+  }
+
+  .glow-text {
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-cyan-400 drop-shadow-[0_0_8px_rgba(20,184,166,0.3)];
+  }
+
+  .btn-primary {
+    @apply px-6 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-full transition-all duration-300 
+           hover:shadow-[0_0_20px_rgba(20,184,166,0.4)] hover:scale-105 active:scale-95 flex items-center justify-center gap-2 font-medium;
+  }
+
+  .btn-secondary {
+    @apply px-6 py-2.5 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-full transition-all duration-300 
+           hover:border-white/20 active:scale-95 flex items-center justify-center gap-2 font-medium;
+  }
+
+  .nav-link {
+    @apply relative text-gray-400 hover:text-white transition-colors duration-300 py-2;
+  }
+
+  .nav-link::after {
+    @apply content-[''] absolute bottom-0 left-0 w-0 h-[2px] bg-teal-500 transition-all duration-300;
+  }
+
+  .nav-link:hover::after {
+    @apply w-full;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-[#0a0a0a];
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-800 rounded-full hover:bg-gray-700 transition-colors;
+}
