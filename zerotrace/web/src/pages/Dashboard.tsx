@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   CreditCard, 
@@ -10,10 +10,52 @@ import {
   Settings, 
   LogOut,
   TrendingUp,
-  FileText
+  FileText,
+  Loader2
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { api } from '../utils/api';
 
 const Dashboard = () => {
+  const [user, setUser] = useState<any>(null);
+  const [credits, setCredits] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    const token = localStorage.getItem('token');
+    
+    if (!storedUser || !token) {
+      navigate('/login');
+      return;
+    }
+
+    const parsedUser = JSON.parse(storedUser);
+    setUser(parsedUser);
+
+    const fetchStatus = async () => {
+      try {
+        const status = await api.wipes.getStatus(token);
+        setCredits(status.wipes_remaining);
+      } catch (err) {
+        console.error('Failed to fetch status', err);
+        // Fallback to local user data if API fails
+        setCredits(parsedUser.wipes_remaining || 0);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStatus();
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
+
   const plans = [
     {
       name: 'Basic',
@@ -39,6 +81,14 @@ const Dashboard = () => {
     }
   ];
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-teal-500 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#050505] flex pt-20">
       {/* Sidebar */}
@@ -62,7 +112,10 @@ const Dashboard = () => {
             </button>
           ))}
         </nav>
-        <button className="flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-400/10 rounded-xl transition-all">
+        <button 
+          onClick={handleLogout}
+          className="flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-400/10 rounded-xl transition-all"
+        >
           <LogOut className="w-5 h-5" />
           <span className="font-medium">Logout</span>
         </button>
@@ -75,7 +128,7 @@ const Dashboard = () => {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
             <div>
               <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-              <p className="text-gray-400">Welcome back, security expert. Manage your credits and wipes.</p>
+              <p className="text-gray-400">Welcome back, {user?.name || 'Security Expert'}. Manage your credits and wipes.</p>
             </div>
             <div className="glass px-6 py-4 rounded-2xl flex items-center gap-4 border-teal-500/20">
               <div className="w-10 h-10 bg-teal-500/20 rounded-full flex items-center justify-center text-teal-400">
@@ -83,7 +136,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">Current Balance</p>
-                <p className="text-xl font-bold text-white">124 Credits</p>
+                <p className="text-xl font-bold text-white">{credits} Credits</p>
               </div>
               <button className="btn-primary p-2 ml-4">
                 <Plus className="w-5 h-5" />
@@ -94,9 +147,9 @@ const Dashboard = () => {
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
             {[
-              { label: 'Total Wipes', value: '42', icon: ShieldCheck, trend: '+12% this month' },
-              { label: 'Data Destroyed', value: '1.2 TB', icon: TrendingUp, trend: 'Irreversible' },
-              { label: 'Active Devices', value: '3', icon: LayoutDashboard, trend: 'Secure connection' },
+              { label: 'Total Wipes', value: '0', icon: ShieldCheck, trend: '0% this month' },
+              { label: 'Data Destroyed', value: '0 GB', icon: TrendingUp, trend: 'Irreversible' },
+              { label: 'Active Devices', value: '0', icon: LayoutDashboard, trend: 'Secure connection' },
             ].map((stat, idx) => (
               <motion.div
                 key={idx}

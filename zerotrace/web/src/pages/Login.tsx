@@ -1,9 +1,33 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Mail, Lock, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Shield, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { api } from '../utils/api';
 
 const Login = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const data = await api.auth.login({ email, password });
+      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('user', JSON.stringify(data));
+      navigate('/dashboard');
+    } catch (err: any) {
+      setError(err.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen pt-24 pb-12 flex items-center justify-center relative overflow-hidden">
       {/* Background Blobs */}
@@ -26,13 +50,22 @@ const Login = () => {
             <p className="text-gray-400">Enter your credentials to access your dashboard</p>
           </div>
 
-          <form className="space-y-6">
+          {error && (
+            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl">
+              {error}
+            </div>
+          )}
+
+          <form className="space-y-6" onSubmit={handleLogin}>
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300 ml-1">Email Address</label>
               <div className="relative group">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-teal-500 transition-colors" />
                 <input
                   type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@company.com"
                   className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/10 transition-all"
                 />
@@ -48,16 +81,27 @@ const Login = () => {
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-teal-500 transition-colors" />
                 <input
                   type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/10 transition-all"
                 />
               </div>
             </div>
 
-            <Link to="/dashboard" className="btn-primary w-full py-4 text-lg mt-4 group">
-              Login
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="btn-primary w-full py-4 text-lg mt-4 group disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : (
+                <span className="flex items-center justify-center gap-2">
+                  Login
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </span>
+              )}
+            </button>
           </form>
 
           <div className="mt-10 text-center">
